@@ -16,7 +16,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-
     /*
     JPA提供的四种标准用法为TABLE,SEQUENCE,IDENTITY,AUTO.
 
@@ -24,7 +23,6 @@ public class User {
     SEQUENCE：根据底层数据库的序列来生成主键，条件是数据库支持序列。
     IDENTITY：主键由数据库自动生成（主要是自动增长型）
     AUTO：主键由程序控制。*/
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @TableId(value = "uid", type = IdType.AUTO)
