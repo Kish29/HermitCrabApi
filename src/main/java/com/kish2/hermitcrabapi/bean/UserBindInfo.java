@@ -32,7 +32,6 @@ public class UserBindInfo {
     private String email;
     private Grade grade;
     private UserType userType;
-    private String instructor;
     private String department;
     private String studentId;
 }
