@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>hermitcrabapi</name>
     <description>Hermit Crab App&apos;s API Project</description>
+    <packaging>jar</packaging>
 
     <properties>
         <java.version>15</java.version>

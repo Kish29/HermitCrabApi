@@ -26,12 +26,20 @@ public class UserBindInfo {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @TableId(value = "uid", type = IdType.INPUT)
     private long uid;
-    @Column(length = 11)
+
+    @Column(length = 11, unique = true)
     private String mobile;
-    @Column(length = 30)
+
+    @Column(length = 30, unique = true)
     private String email;
+
     private Grade grade;
+
     private UserType userType;
+
     private String department;
+
+    /* 学号应该不会超过64位，节省空间 */
+    @Column(length = 64, unique = true)
     private String studentId;
 }
