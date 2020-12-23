@@ -9,6 +9,6 @@ import org.apache.ibatis.annotations.Select;
 public interface IUserBindInfoMapper extends BaseMapper<UserBindInfo> {
 
     /* 手机号码重复性检查 */
-    @Select("select count(*) from user_bind_info where mobile={mobile}")
+    @Select("select count(*) from user_bind_info where mobile=#{mobile}")
     int mobileRepeatCheck(String mobile);
 }

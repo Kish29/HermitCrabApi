@@ -2,6 +2,7 @@ package com.kish2.hermitcrabapi;
 
 import com.kish2.hermitcrabapi.controller.UserController;
 import com.kish2.hermitcrabapi.service.IUserService;
+import com.kish2.hermitcrabapi.utils.ValidCheck;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,9 +30,13 @@ class HermitcrabapiApplicationTests {
         System.out.println("这是中文");
     }
 
+    /* 手机号重复性检查 */
+    /* pass */
     @Test
-    void thread() {
-
+    void mobileRepeatCheck() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(userService.mobileRepeatCheck("13658398508"));
+        }
     }
 
     @Test
@@ -76,9 +81,9 @@ class HermitcrabapiApplicationTests {
     void controllerConcurrentTest() throws ExecutionException, InterruptedException {
         long start, end;
         start = System.currentTimeMillis();
-        for (int i = 20002; i <= 30002; i++) {
+        for (int i = 50003; i <= 50010; i++) {
             Map<String, Object> reg = userController.reg(String.valueOf(i), null);
-//            System.out.println(reg);
+            System.out.println(reg);
         }
         while (true) {
             if (ServerThreadPool.THREAD_POOL.getActiveCount() == 0)
@@ -101,6 +106,23 @@ class HermitcrabapiApplicationTests {
         end = System.currentTimeMillis();
         System.out.println("Single use " + (end - start) + "ms");
         /* 48311ms  = 48.3s */
+    }
+
+    /* pass */
+    @Test
+    void randomTest() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(ValidCheck.getRandomCode(6));
+        }
+    }
+
+    /* 用户登录测试 */
+    /* pass */
+    @Test
+    void loginTest() throws ExecutionException, InterruptedException {
+        for (int i = 1; i <= 10; i++) {
+            System.out.println(userController.authByUsername("用户" + i, "123456"));
+        }
     }
 
 }

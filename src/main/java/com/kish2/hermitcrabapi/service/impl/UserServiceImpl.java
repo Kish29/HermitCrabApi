@@ -1,5 +1,6 @@
 package com.kish2.hermitcrabapi.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.kish2.hermitcrabapi.bean.User;
 import com.kish2.hermitcrabapi.bean.UserBindInfo;
 import com.kish2.hermitcrabapi.enums.user.Gender;
@@ -9,6 +10,8 @@ import com.kish2.hermitcrabapi.enums.user.UserType;
 import com.kish2.hermitcrabapi.mapper.IUserBindInfoMapper;
 import com.kish2.hermitcrabapi.mapper.IUserMapper;
 import com.kish2.hermitcrabapi.service.IUserService;
+import com.kish2.hermitcrabapi.utils.LicenseCheckUtil;
+import com.kish2.hermitcrabapi.utils.ServerStatus;
 import com.kish2.hermitcrabapi.utils.ValidCheck;
 import org.springframework.stereotype.Service;
 
@@ -33,14 +36,24 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Map<String, Object> reg(String mobile, String vCode) {
-        // TODO: 2020/11/30 手机号有效性再次验证
-            // if (mobileRepeatCheck(mobile)) {
-        //     return null;
-        // }
-        // // TODO: 2020/11/30 验证码有效性验证
-        // if (!mobileAndCodeCheck(mobile, vCode)) {
-        //     return null;
-        // }
+        HashMap<String, Object> res = new HashMap<>();
+        /* 手机号有效性和重复性验证 */
+        if (!ValidCheck.isValidMobile(mobile)) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "无效的手机号");
+            return res;
+        }
+        if (mobileRepeatCheck(mobile)) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "该手机号已被注册");
+            return res;
+        }
+        /* 验证码有效性验证 */
+        if (!mobileAndCodeCheck(mobile, vCode)) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "验证码错误");
+            return res;
+        }
         User user = new User();
         user.setUsername("用户" + mobile);
         user.setRegDate(new Date());
@@ -53,18 +66,40 @@ public class UserServiceImpl implements IUserService {
             userBindInfo.setGrade(Grade.other);
             userBindInfo.setUserType(UserType.normal);
             userBindInfoMapper.insert(userBindInfo);
-            HashMap<String, Object> res = new HashMap<>();
             res.put("user", user);
             res.put("user_bind_info", userBindInfo);
-            return res;
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
+            res.put(ServerStatus.KEY_SERVER_MSG, "欢迎小贝壳的到来~");
         } else {
-            return null;
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "服务器异常，请稍后再试试吧~");
         }
+        return res;
     }
 
     @Override
     public Map<String, Object> authByUsername(String username, String password) {
-        return null;
+        HashMap<String, Object> res = new HashMap<>();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        password = LicenseCheckUtil.passwordEncryption(password);
+        queryWrapper.eq("username", username).eq("password", password);
+        User user = userMapper.selectOne(queryWrapper);
+        if (user == null) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "密码错误");
+            return res;
+        }
+        UserBindInfo userBindInfo = userBindInfoMapper.selectById(user.getUid());
+        if (userBindInfo == null) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "服务器异常，请稍后再试试吧~");
+            return res;
+        }
+        res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
+        res.put(ServerStatus.KEY_SERVER_MSG, "欢迎回来~" + user.getUsername());
+        res.put("user", user);
+        res.put("user_bind_info", userBindInfo);
+        return res;
     }
 
     @Override
@@ -76,14 +111,14 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public String getMobileCode(String mobile, HashMap<String, String> mobileCode) {
-        return null;
+    public String getMobileCode(String mobile) {
+        String code = ValidCheck.getRandomCode(6);
+        mobileCode.put(mobile, code);
+        return code;
     }
 
     @Override
     public boolean mobileRepeatCheck(String mobile) {
-        if (!ValidCheck.isValidMobile(mobile))
-            return false;
-        return userBindInfoMapper.mobileRepeatCheck(mobile) <= 0;
+        return userBindInfoMapper.mobileRepeatCheck(mobile) > 0;
     }
 }
