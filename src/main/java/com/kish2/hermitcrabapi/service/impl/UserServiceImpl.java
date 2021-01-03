@@ -35,7 +35,7 @@ public class UserServiceImpl implements IUserService {
     private IUserBindInfoMapper userBindInfoMapper;
 
     @Override
-    public Map<String, Object> reg(String mobile, String vCode) {
+    public Map<String, Object> reg(String mobile, String code) {
         HashMap<String, Object> res = new HashMap<>();
         /* 手机号有效性和重复性验证 */
         if (!ValidCheck.isValidMobile(mobile)) {
@@ -49,11 +49,11 @@ public class UserServiceImpl implements IUserService {
             return res;
         }
         /* 验证码有效性验证 */
-        if (!mobileAndCodeCheck(mobile, vCode)) {
+        /*if (!mobileAndCodeCheck(mobile, code)) {
             res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
             res.put(ServerStatus.KEY_SERVER_MSG, "验证码错误");
             return res;
-        }
+        }*/
         User user = new User();
         user.setUsername("用户" + mobile);
         user.setRegDate(new Date());
@@ -90,7 +90,32 @@ public class UserServiceImpl implements IUserService {
             return res;
         }
         UserBindInfo userBindInfo = userBindInfoMapper.selectById(user.getUid());
+        return getStringObjectMap(res, userBindInfo, user, userBindInfo == null);
+    }
+
+    @Override
+    public Map<String, Object> authByMobile(String mobile, String code) {
+        /* 验证码有效性验证 */
+        /*if (!mobileAndCodeCheck(mobile, code)) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "验证码错误");
+            return res;
+        }*/
+        HashMap<String, Object> res = new HashMap<>();
+        QueryWrapper<UserBindInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("mobile", mobile);
+        UserBindInfo userBindInfo = userBindInfoMapper.selectOne(queryWrapper);
         if (userBindInfo == null) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "改手机号未注册");
+            return res;
+        }
+        User user = userMapper.selectById(userBindInfo.getUid());
+        return getStringObjectMap(res, userBindInfo, user, user == null);
+    }
+
+    private Map<String, Object> getStringObjectMap(HashMap<String, Object> res, UserBindInfo userBindInfo, User user, boolean b) {
+        if (b) {
             res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
             res.put(ServerStatus.KEY_SERVER_MSG, "服务器异常，请稍后再试试吧~");
             return res;
@@ -103,11 +128,39 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public boolean mobileAndCodeCheck(String mobile, String vCode) {
+    public Map<String, Object> updateUsername(long uid, String username) {
+        HashMap<String, Object> res = new HashMap<>();
+        /* 不要忘记上锁 */
+        synchronized (this) {
+            userMapper.updateUsername(uid, username);
+        }
+        res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
+        res.put(ServerStatus.KEY_SERVER_MSG, "修改成功~");
+        /* 返回修改成功的用户名 */
+        res.put("new_username", username);
+        return res;
+    }
+
+    @Override
+    public Map<String, Object> updatePassword(long uid, String password) {
+        HashMap<String, Object> res = new HashMap<>();
+        /* 加密后存储 */
+        password = LicenseCheckUtil.passwordEncryption(password);
+        /* 不要忘记上锁 */
+        synchronized (this) {
+            userMapper.updatePassword(uid, password);
+        }
+        res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
+        res.put(ServerStatus.KEY_SERVER_MSG, "修改成功~");
+        return res;
+    }
+
+    @Override
+    public boolean mobileAndCodeCheck(String mobile, String code) {
         String key = mobileCode.get(mobile);
         /* 移除数据 */
         mobileCode.remove(mobile);
-        return key != null && key.equals(vCode);
+        return key != null && key.equals(code);
     }
 
     @Override

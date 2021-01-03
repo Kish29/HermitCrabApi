@@ -19,6 +19,7 @@
         <java.version>15</java.version>
         <mybatis-plus.version>3.3.2</mybatis-plus.version>
         <junit.version>4.12</junit.version>
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>

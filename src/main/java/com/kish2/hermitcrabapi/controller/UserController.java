@@ -33,9 +33,9 @@ public class UserController {
     /* 使用future模式，可让主线程进行其他事务的处理，而不阻塞主线程 */
     @RequestMapping("reg")
     @ResponseBody
-    public Map<String, Object> reg(String mobile, String vCode) throws ExecutionException, InterruptedException {
+    public Map<String, Object> reg(String mobile, String code) throws ExecutionException, InterruptedException {
         Future<Map<String, Object>> future = ServerThreadPool.THREAD_POOL.submit(() -> {
-            return userService.reg(mobile, vCode.trim());   // 注意剔除多余空格
+            return userService.reg(mobile, code.trim());   // 注意剔除多余空格
         });
         return future.get();
     }
@@ -48,4 +48,32 @@ public class UserController {
         });
         return future.get();
     }
+
+    @RequestMapping("authentication/mobile_code")
+    @ResponseBody
+    public Map<String, Object> authByMobile(String mobile, String code) throws ExecutionException, InterruptedException {
+        Future<Map<String, Object>> future = ServerThreadPool.THREAD_POOL.submit(() -> {
+            return userService.authByMobile(mobile, code);   // 注意剔除多余空格
+        });
+        return future.get();
+    }
+
+    @RequestMapping("update/username")
+    @ResponseBody
+    public Map<String, Object> updateUsername(long uid, String username) throws ExecutionException, InterruptedException {
+        Future<Map<String, Object>> future = ServerThreadPool.THREAD_POOL.submit(() -> {
+            return userService.updateUsername(uid, username.trim());
+        });
+        return future.get();
+    }
+
+    @RequestMapping("update/password")
+    @ResponseBody
+    public Map<String, Object> updatePassword(long uid, String password) throws ExecutionException, InterruptedException {
+        Future<Map<String, Object>> future = ServerThreadPool.THREAD_POOL.submit(() -> {
+            return userService.updatePassword(uid, password.trim());
+        });
+        return future.get();
+    }
+
 }
