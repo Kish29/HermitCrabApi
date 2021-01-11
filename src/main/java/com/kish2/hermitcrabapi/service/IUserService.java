@@ -10,6 +10,9 @@ public interface IUserService {
 
     Map<String, Object> authByMobile(String mobile, String code);
 
+    /* token验证登录方式 */
+    Map<String, Object> authByToken(String token);
+
     Map<String, Object> updateUsername(long uid, String username);
 
     Map<String, Object> updatePassword(long uid, String password);

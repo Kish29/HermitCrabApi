@@ -86,7 +86,7 @@ public class UserServiceImpl implements IUserService {
         User user = userMapper.selectOne(queryWrapper);
         if (user == null) {
             res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
-            res.put(ServerStatus.KEY_SERVER_MSG, "密码错误");
+            res.put(ServerStatus.KEY_SERVER_MSG, "用户名或密码错误");
             return res;
         }
         UserBindInfo userBindInfo = userBindInfoMapper.selectById(user.getUid());
@@ -114,6 +114,21 @@ public class UserServiceImpl implements IUserService {
         return getStringObjectMap(res, userBindInfo, user, user == null);
     }
 
+    @Override
+    public Map<String, Object> authByToken(String token) {
+        HashMap<String, Object> res = new HashMap<>();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("token", token);
+        User user = userMapper.selectOne(queryWrapper);
+        if (user == null) {
+            res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
+            res.put(ServerStatus.KEY_SERVER_MSG, "无效的token");
+            return res;
+        }
+        UserBindInfo userBindInfo = userBindInfoMapper.selectById(user.getUid());
+        return getStringObjectMap(res, userBindInfo, user, userBindInfo == null);
+    }
+
     private Map<String, Object> getStringObjectMap(HashMap<String, Object> res, UserBindInfo userBindInfo, User user, boolean b) {
         if (b) {
             res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_FAILURE);
@@ -131,9 +146,9 @@ public class UserServiceImpl implements IUserService {
     public Map<String, Object> updateUsername(long uid, String username) {
         HashMap<String, Object> res = new HashMap<>();
         /* 不要忘记上锁 */
-        synchronized (this) {
-            userMapper.updateUsername(uid, username);
-        }
+//        synchronized (this) {
+        userMapper.updateUsername(uid, username);
+//        }
         res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
         res.put(ServerStatus.KEY_SERVER_MSG, "修改成功~");
         /* 返回修改成功的用户名 */
@@ -147,9 +162,9 @@ public class UserServiceImpl implements IUserService {
         /* 加密后存储 */
         password = LicenseCheckUtil.passwordEncryption(password);
         /* 不要忘记上锁 */
-        synchronized (this) {
-            userMapper.updatePassword(uid, password);
-        }
+//        synchronized (this) {
+        userMapper.updatePassword(uid, password);
+//        }
         res.put(ServerStatus.KEY_SERVER_STATUS, ServerStatus.SERVER_OPERATED_SUCCESS);
         res.put(ServerStatus.KEY_SERVER_MSG, "修改成功~");
         return res;
